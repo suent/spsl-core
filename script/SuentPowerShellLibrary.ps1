@@ -42,6 +42,7 @@ $ErrorActionPreference = "Stop"
 $spslLibraryLoaderFilename = "LibraryLoader.ps1"
 $spslDefaultIncludePath = "$env:USERPROFILE/.suent/spsl"
 $spslLoaderSource = "https://raw.githubusercontent.com/suent/spsl-core/main/include/LibraryLoader.ps1" 
+$spslLoader = $null
 
 Function OptimizePath ($x) {
 	<#
@@ -63,11 +64,12 @@ Function Write-SpslDebug ($x) {
 # Check include path
 If ($SpslIncludePath) {
 	$spslCheckIncludePath = $SpslIncludePath
+	$spslUseIncludePath = $SpslIncludePath
 } else {
 	if (-Not $SpslForceDownload) {
 		Write-SpslDebug "Searching for SPSL include path..."
 	}
-	$SpslIncludePath = $spslDefaultIncludePath
+	$spslUseIncludePath = $spslDefaultIncludePath
 	$spslCheckIncludePath = @(
 		".",
 		"include",
@@ -78,7 +80,6 @@ If ($SpslIncludePath) {
 
 # Check if loader exists, if not forced download
 If (-Not $SpslForceDownload) {
-	$spslLoader = $null
 	ForEach ($spslCheckInclude in $spslCheckIncludePath) {
 		Write-SpslDebug "Checking $(OptimizePath($spslCheckInclude))"
 		If (Test-Path "$spslCheckInclude/$spslLibraryLoaderFilename") {
@@ -92,10 +93,10 @@ If (-Not $SpslForceDownload) {
 # Download if it doesnt, or if forced
 If (-not $spslLoader) {
 	Write-SpslDebug "Downloading LibraryLoader.ps1 from GitHub..."
-	If (-not (Test-Path $spslIncludePath)) {
-		New-Item -Path $spslIncludePath -ItemType Directory -Verbose:$VerbosePreference | Out-Null
+	If (-not (Test-Path $spslUseIncludePath)) {
+		New-Item -Path $spslUseIncludePath -ItemType Directory -Verbose:$VerbosePreference | Out-Null
 	}
-	$spslLoader = "$spslIncludePath/LibraryLoader.ps1"
+	$spslLoader = "$spslUseIncludePath/LibraryLoader.ps1"
 	Invoke-WebRequest $spslLoaderSource -OutFile $spslLoader -Verbose:$False -Debug:$DebugPreference
 	Write-Verbose "SPSL LibraryLoader downloaded: $(OptimizePath($spslLoader))"
 }
